@@ -1,0 +1,101 @@
+<html>
+<head>
+  <title>Electric field simulation</title>
+  <script type="text/javascript">
+  var charges = [];
+
+  function add_charge(charge_magnitude, x_coordinate, y_coordinate) {
+    charges.push({
+      magnitude: charge_magnitude,
+      x: x_coordinate,
+      y: y_coordinate
+    });
+  }
+
+  function calculate_net_electric_field(x_pos, y_pos) {
+    var k = 8.99 * 10 ** 9;
+    var e_net_x = 0;
+    var e_net_y = 0;
+    for(var i = 0; i < charges.length; i++) {
+      var dy = charges[i].y - y_pos;
+      var dx = charges[i].x - x_pos;
+      var e_x = k * charges[i].magnitude / Math.pow((dx**2 + dy ** 2),1.5) * dx;
+      var e_y = k * charges[i].magnitude / Math.pow((dx**2 + dy ** 2),1.5) * dy;
+      e_net_x = e_net_x + e_x;
+      e_net_y = e_net_y + e_y;;
+    }
+    return [e_net_x, e_net_y];
+  }
+
+  function get_context() {
+    var canvas = document.getElementById("canvas");
+    return canvas.getContext("2d");
+  }
+
+  function draw() {
+    var context = get_context();
+    var image = new Image();
+    image.src = "arrow.png";
+    image.onload = function () {
+      draw_vector_field(context, image, 800, 800, 50);
+    }
+    setInterval(function() {
+      draw_charges(context)
+    },2500);
+  }
+
+  function draw_vector_field(context, arrow_image, width, height, size) {
+    for(var i = 0; i < width; i = i + width / size) {
+      for(var j = 0; j < height; j = j + height / size) {
+        var electric_force_center = calculate_net_electric_field(i,j);
+        var angle = Math.atan2(electric_force_center[1], electric_force_center[0]);   //radians
+        var degrees = 180*angle/Math.PI;  //degrees
+        var new_angle = Math.PI / 180 * ((-90+Math.round(degrees))%360); //round number, avoid decimal fragments
+        if(electric_force_center[0] == 0 && electric_force_center[1] == 0) { continue; }
+        draw_arrow(context, i, j , width / size, height / size, new_angle);
+      }
+    }
+  }
+
+  function draw_arrow(context, x, y, width, height, angle) {
+    var image = new Image();
+    image.src = "arrow.png";
+    image.onload = function() {
+      context.translate(x,y);
+      context.rotate(angle);
+      context.drawImage(image, -width / 2, -height / 2,width,height);
+      context.rotate(-angle);
+      context.translate(-x,-y);
+    }
+  }
+
+  function draw_charges(context) {
+    for(var i = 0; i < charges.length; i = i + 1) {
+      context.beginPath();
+      context.arc(charges[i].x, charges[i].y, 25, 0, 2 * Math.PI);
+      if(charges[i].magnitude < 0) {
+        context.fillStyle = "blue";
+      } else {
+        context.fillStyle = "red";
+      }
+      context.fill();
+      context.font = "70px Arial"
+      context.fillStyle = "white";
+      context.textAlign = "center";
+      context.fillText((charges[i].magnitude < 0) ? "-" : "+", charges[i].x,charges[i].y + 25);
+    }
+  }
+
+  function setup() {
+    add_charge(1.6* 10 ** -19, 50, 50);
+    add_charge(-2 * 1.6*10**-19,350,50);
+    add_charge(2 * 1.6*10**-19,350,350);
+    add_charge(-1.6*10**-19,50,350);
+    draw();
+  }
+  </script>
+</head>
+<body onload="setup()">
+  <canvas id="canvas" width="800" height="800"></canvas>
+</body>
+</html>
