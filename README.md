@@ -1,5 +1,5 @@
 # Electric field line simulation
-Display electric field lines for point charges.
+Display electric field lines for point charges. Application of the definition of electric field (force exerted per unit charge) and Coulomb's law.
 
 # Preview
 
